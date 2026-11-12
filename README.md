@@ -189,7 +189,8 @@ n8n-lead-intake-automation/
     ├── main-workflow.png
     ├── error-workflow.png
     ├── test-form.png
-    └── telegram-notification.png
+    ├──telegram-notification1.png
+    └── telegram-notification2.png
 ```
 
 ## Demo
