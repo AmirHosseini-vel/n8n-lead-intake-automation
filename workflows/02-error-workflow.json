@@ -1,0 +1,68 @@
+{
+  "name": "Lead Intake - Error Workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "bcb3bf78-f10b-4eb3-8e19-786a9b087c56",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "={{ 'n8n workflow error\\nWorkflow: ' + ($json.workflow?.name ?? 'Unknown') + '\\nLast node: ' + ($json.execution?.lastNodeExecuted ?? 'Unknown') + '\\nError: ' + ($json.execution?.error?.message ?? 'No error message available') }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "69cfa21f-5d6c-4309-838f-14f455d48d58",
+      "name": "Telegram - Send Error Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        272,
+        0
+      ],
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "content": "### How it works\n\nThis workflow handles execution errors from the Lead Intake Main Workflow.\n\nThe Error Trigger receives information about a failed workflow execution, including relevant error details. The workflow then sends a Telegram notification to alert the administrator about the failure.\n\nThis helps identify workflow issues and makes it easier to investigate failed executions.\n\nThe workflow is triggered automatically when an assigned workflow encounters an unhandled execution error. It does not handle normal validation failures, since invalid submissions are processed by the main workflow.\n\n### Setup\n\n- Configure a Telegram API credential.\n- Set the destination Telegram Chat ID.\n- Select this workflow as the Error Workflow in the Main Workflow settings.\n\n### Customization\n\nThe Telegram alert message can be customized to include additional execution details, such as the failed node, error message, and execution link.",
+        "height": 384,
+        "width": 688
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        -400
+      ],
+      "id": "7f4e287c-5eea-4e75-8df7-bf9cf43df800",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Send Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}
