@@ -1,0 +1,127 @@
+{
+  "name": "Test - Send Lead via Form",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Dental Clinic - Lead Test Form",
+        "formDescription": "Use this form to send test lead data to the Main Lead Intake workflow. Leave fields empty or enter invalid values when testing validation.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Full Name",
+              "fieldName": "name",
+              "placeholder": "e.g. Ali Rezaei"
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldName": "email",
+              "placeholder": "e.g. ali@example.com (you can leave this empty)"
+            },
+            {
+              "fieldLabel": "Phone",
+              "fieldName": "phone",
+              "placeholder": "e.g. 09121234567"
+            },
+            {
+              "fieldLabel": "Service",
+              "fieldType": "dropdown",
+              "fieldName": "service",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "implant"
+                  },
+                  {
+                    "option": "teeth whitening"
+                  },
+                  {
+                    "option": "dental checkup"
+                  },
+                  {
+                    "option": "other"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Message",
+              "fieldType": "textarea",
+              "fieldName": "message",
+              "placeholder": "Write a short message (optional)"
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {
+          "appendAttribution": false,
+          "buttonLabel": "Send Test Lead",
+          "path": "test-lead-form",
+          "ignoreBots": true
+        }
+      },
+      "id": "22655e8b-fb41-46e2-8c52-ce8269f699d0",
+      "name": "Form Trigger - Enter Test Lead",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        16,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://YOUR_N8N_DOMAIN/webhook/lead",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": false,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { name: $json.name ?? '', email: $json.email ?? '', phone: $json.phone ?? '', service: $json.service ?? '', message: $json.message ?? '' } }}",
+        "options": {}
+      },
+      "id": "bc1c9d02-fc19-41b2-94e9-12d2abcea288",
+      "name": "HTTP Request - Send to Main Webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        320,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### How it works\n\nThis workflow provides a simple form for testing the Lead Intake Main Workflow.\n\nThe Form Trigger generates a web form that allows users to enter lead information, including name, email, phone number, requested service, and message.\n\nAfter form submission, the HTTP Request node sends the collected data as a JSON payload using an authenticated HTTP POST request to the Main Workflow Webhook.\n\nThis workflow makes it easy to simulate customer submissions and test different scenarios without manually creating HTTP requests or using external testing tools.\n\n### Setup\n\n- Configure the Main Workflow Webhook URL in the HTTP Request node.\n- Select the Header Auth credential used by the Main Webhook.\n- Make sure the Webhook URL and authentication settings match the selected test or production environment.\n\n### Customization\n\nForm fields, labels, and available service options can be modified to test different customer inputs, including valid, incomplete, and invalid submissions.",
+        "height": 400,
+        "width": 784
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        -496
+      ],
+      "id": "95cdde62-035f-4826-ad9c-0f9e8624b31d",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Form Trigger - Enter Test Lead": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - Send to Main Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}
