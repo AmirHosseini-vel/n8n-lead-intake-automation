@@ -1,0 +1,414 @@
+{
+  "name": "Lead Intake - Main Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "id": "fd755f39-aa3b-4c08-81ec-337ae405fcf7",
+      "name": "Webhook - Receive Lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a001",
+              "name": "name",
+              "value": "={{ String($json.body?.name ?? '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "a002",
+              "name": "email",
+              "value": "={{ String($json.body?.email ?? '').trim().toLowerCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "a003",
+              "name": "phone",
+              "value": "={{ String($json.body?.phone ?? '').replace(/\\D/g, '') }}",
+              "type": "string"
+            },
+            {
+              "id": "a004",
+              "name": "service",
+              "value": "={{ String($json.body?.service ?? '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "a005",
+              "name": "message",
+              "value": "={{ String($json.body?.message ?? '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "a006",
+              "name": "created_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "255fa3d2-46b7-44c0-98cb-600ec8fa242e",
+      "name": "Edit Fields - Clean Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a101",
+              "leftValue": "={{ Boolean($json.name) && $json.email.includes('@') && $json.phone.length >= 7 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9ce4403d-81fc-4d81-a71a-d209177b7ec8",
+      "name": "IF - Is Lead Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a201",
+              "name": "status",
+              "value": "new",
+              "type": "string"
+            },
+            {
+              "id": "a202",
+              "name": "reason",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "8ec81dbb-a8ff-4877-bdcd-d5959503f64b",
+      "name": "Edit Fields - Mark Valid",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        752,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "Leads",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": null
+        },
+        "options": {}
+      },
+      "id": "f0615afe-c8c3-47a5-8bb4-7c7ff1de3af4",
+      "name": "Data Table - Save Valid Lead",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        992,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "={{ 'New lead received!\\nName: ' + $('Edit Fields - Clean Data').item.json.name + '\\nPhone: ' + $('Edit Fields - Clean Data').item.json.phone + '\\nService: ' + $('Edit Fields - Clean Data').item.json.service + '\\nEmail: ' + $('Edit Fields - Clean Data').item.json.email }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "0e248034-2d9b-4852-ab9e-c5e018c00fe4",
+      "name": "Telegram - Notify New Lead",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        0
+      ],
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a301",
+              "name": "status",
+              "value": "invalid",
+              "type": "string"
+            },
+            {
+              "id": "a302",
+              "name": "reason",
+              "value": "={{ [!$json.name ? 'name is empty' : '', !$json.email.includes('@') ? 'email is missing or invalid' : '', $json.phone.length < 7 ? 'phone must contain at least 7 digits' : ''].filter(Boolean).join('; ') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "9dd530cb-19c1-408e-b2bb-b6e033c577a6",
+      "name": "Edit Fields - Mark Invalid",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        752,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "Leads",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "service",
+              "displayName": "service",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "845b96cf-f3f0-4bd4-9b80-c72e453c48f9",
+      "name": "Data Table - Save Invalid Lead",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        992,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### How it works\n\nThis workflow automates the lead intake process for a dental clinic. It receives customer submissions through an authenticated HTTP POST Webhook, cleans and prepares the incoming data, and validates the required fields.\n\nValid submissions are saved to the `Leads` Data Table with the status `new`, and a Telegram notification is sent to inform the administrator about the new lead.\n\nInvalid submissions are also saved to the same Data Table with the status `invalid` and a reason explaining the validation failure. No new lead notification is sent for invalid submissions.\n\nThe Webhook responds immediately while the workflow continues processing the incoming data.\n\n### Setup\n\n- Configure the Webhook Header Auth credential.\n- Create a Data Table named `Leads` with the required columns.\n- Configure the Telegram API credential and destination Chat ID.\n- Assign the Lead Intake Error Workflow in the workflow settings.\n- Make sure the sending application includes the required JSON fields and authentication header.\n\n### Customization\n\nAdjust the validation rules, Data Table fields, and Telegram notification content to match the clinic's requirements. Keep sensitive customer information out of notification messages.",
+        "height": 480,
+        "width": 704
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        -368
+      ],
+      "id": "af35dcb1-76a1-428e-882d-423d9b3654c9",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - Receive Lead": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields - Clean Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields - Clean Data": {
+      "main": [
+        [
+          {
+            "node": "IF - Is Lead Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Is Lead Valid?": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields - Mark Valid",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields - Mark Invalid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields - Mark Valid": {
+      "main": [
+        [
+          {
+            "node": "Data Table - Save Valid Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Table - Save Valid Lead": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Notify New Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields - Mark Invalid": {
+      "main": [
+        [
+          {
+            "node": "Data Table - Save Invalid Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  }
+}
