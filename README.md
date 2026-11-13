@@ -197,4 +197,4 @@ n8n-lead-intake-automation/
 
 Watch the project demonstration video on YouTube:
 
-- **Demo video:** [n8n Lead Intake Automation – Demo](https://youtu.be/JIWAWDSN-gc) *(Unlisted)*
+- **Demo video:** [n8n Lead Intake Automation – Demo](https://youtu.be/D9FFSYbfRSc) *(Unlisted)*
